@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
     "cfg",
     "ast",
@@ -7,6 +8,7 @@ members = [
     "luau-lifter",
     "restructure",
     "luau-worker",
+    "web-server",
 ]
 
 [workspace.package]
