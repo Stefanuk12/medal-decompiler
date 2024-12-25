@@ -17,8 +17,8 @@ jobs:
         uses: SebRollen/toml-action@v1.0.2
         id: read_toml
         with:
-          file: './web-server/Cargo.toml'
-          field: 'package.version'
+          file: "./web-server/Cargo.toml"
+          field: "package.version"
 
     outputs:
       version: ${{ steps.read_toml.outputs.value }}
@@ -55,27 +55,39 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-gnu
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz tar.zst
+            artifact_name: web-server.exe
+          - target: x86_64-unknown-linux-gnu
+            artifact_name: web-server
     steps:
       - name: Checkout
         uses: actions/checkout@master
 
-      - name: Compile Rust
-        id: compile
-        uses: rust-build/rust-build.action@v1.4.3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
-          TOOLCHAIN_VERSION: nightly
-          UPLOAD_MODE: none
-          SRC_DIR: ./web-server
+          target: ${{ matrix.target }}
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./web-server -> target"
+        
+      - name: Cross build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          target: ${{ matrix.target }}
+          args: "--release"
+          toolchain: nightly
+          strip: true
 
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.compile.outputs.BUILT_ARCHIVE }}
+          file: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.artifact_name }}
           tag: ${{ needs.draft-release.outputs.tag }}
           overwrite: true
