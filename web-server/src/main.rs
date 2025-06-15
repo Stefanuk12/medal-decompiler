@@ -2,7 +2,7 @@
 
 use std::io;
 
-use axum::{body::{Body, Bytes}, http::StatusCode, response::{IntoResponse, Response}, routing::get, Router};
+use axum::{body::{Body, Bytes}, http::StatusCode, response::{IntoResponse, Response}, routing::post, Router};
 use base64::prelude::*;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -47,7 +47,7 @@ async fn main() -> Result<(), io::Error> {
 
     // Build our application with a route
     let app = Router::new()
-        .route("/decompile", get(decompile));
+        .route("/decompile", post(decompile));
 
     // Run the web server
     let listener = TcpListener::bind(BIND_ADDR).await?;
